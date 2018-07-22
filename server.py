@@ -1,7 +1,10 @@
 import socket
+import threading
 from time import sleep
 
+is_running_server = False
 
+hello_msg = "$: "
 cmd_server = "--server"
 cmd_port = "--port"
 cmd_exit = "--exit"
@@ -47,10 +50,22 @@ def send_message(connection, message):
 
 
 def recv_message(connection):
-    print("recv: %s" % connection.recv(128).decode("utf-8"))
+    print("recv: %s\n%s" % (connection.recv(128).decode("utf-8"), hello_msg), end="")
+
+
+def run_server():
+    global is_running_server
+    global client_sock
+    global server_sock
+    wait_connection(server_sock, 1)
+    while is_running_server:
+        recv_message(client_sock)
+        sleep(0.1)
+    print("runner thread stopped")
 
 
 def do_cmd(cmd_line):
+    global is_running_server
     global server_sock
     global client_sock
     is_server = False
@@ -64,7 +79,7 @@ def do_cmd(cmd_line):
     for cmd_one in cmd_list:
         # exit
         if cmd_one == "--exit":
-            return True;
+            return True
         # server
         elif is_cmd(cmd_one, cmd_server)[0]:
             server_opt = is_cmd(cmd_one, cmd_server)[1]
@@ -92,8 +107,12 @@ def do_cmd(cmd_line):
             print("please enter port, and repeat.")
         elif server_opt == cmd_opt_start_server:
             server_sock = create_server('localhost', num_port)
+            is_running_server = True
+            thread_serv = threading.Thread(target=run_server, args=())
+            thread_serv.start()
             print("server started")
         elif server_opt == cmd_opt_close_server:
+            is_running_server = False
             server_sock.close()
             print("server closed")
         else:
@@ -101,7 +120,7 @@ def do_cmd(cmd_line):
 
     if is_send_msg:
         send_message(client_sock, msg)
-        recv_message(client_sock)
+        # recv_message(client_sock)
 
     if is_wait_conn:
         wait_connection(server_sock, 1)
@@ -111,8 +130,9 @@ def do_cmd(cmd_line):
 
 
 def main():
+    global hello_msg
     while True:
-        cmd_line = input("please type command: ")
+        cmd_line = input(hello_msg)
         is_exit = do_cmd(cmd_line)
         if is_exit:
             break
