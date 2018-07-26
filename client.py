@@ -3,6 +3,7 @@ from time import sleep
 
 client_sock = ""
 
+
 def init_client(portnum):
     global client_sock
     client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
