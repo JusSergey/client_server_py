@@ -1,13 +1,12 @@
 import socket
+import threading
 from time import sleep
-
-client_sock = ""
 
 
 def init_client(portnum):
-    global client_sock
     client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_sock.connect(('localhost', int(portnum)))
+    return client_sock
 
 
 def revert(inputstr):
@@ -18,21 +17,33 @@ def revert(inputstr):
     return res
 
 
-def main():
-    portnum = "12300"
+def main(portnum, it):
 
-    init_client(portnum)
+    client_sock = init_client(portnum)
     while True:
-        data = client_sock.recv(128)
+        data = client_sock.recv(60000)
         if len(data) == 0:
             print("server is closed")
             break
         strmsg = str(data.decode("utf-8"))
-        print("receive:  %s" % strmsg)
+        print("id:[%s], packet sz:[%s bytes]" % (str(it), str(len(strmsg))))
         responceStr = revert(strmsg)
-        print("responce: %s" % responceStr)
         client_sock.sendall(responceStr.encode())
-        sleep(1)
+        sleep(0.05)
 
 
-main()
+def start_client_impl(port_num, it):
+    thr = threading.Thread(target=main, args=(port_num, it))
+    thr.start()
+
+
+def test_perf():
+    count_clients = int(input("enter please count clients: "))
+    port_num = str(input("server port: "))
+    it = 0
+    while it < count_clients:
+        start_client_impl(port_num, it)
+        it += 1
+
+
+test_perf()
