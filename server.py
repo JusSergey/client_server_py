@@ -168,8 +168,10 @@ def do_cmd(cmd_line):
             print("invalid option for --server %s" % server_opt)
 
     if is_send_msg:
-        for cli_fd in serv_sock.clients:
-            serv_sock.send_msg(msg, 0)
+        iter = 0
+        while iter < len(serv_sock.clients):
+            serv_sock.send_msg(msg, iter)
+            iter += 1
         # data = serv_sock.receive_msg(0, len(msg))
         # print(data.decode("utf-8"))
 
