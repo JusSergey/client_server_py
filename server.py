@@ -23,6 +23,7 @@ class Server:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.port = port
         self.clients = list()
+        self.thr = list()
         self.scheduler_task = threading.Thread
         self.count = 0
         self.ip = ip
@@ -37,9 +38,19 @@ class Server:
     def listen(self, count):
         self.sock.listen(count)
 
+    def rea(self, fd_c):
+        while True:
+            data = self.clients[fd_c].recv(128)
+            print(data.decode("UTF-8"))
+
     def wait_connection(self):
-        self.clients.append(self.sock.accept()[0])
+        cli_fd = self.sock.accept()
+
+        self.clients.append(cli_fd[0])
+        curr_count_c = self.count
         self.count += 1
+        thr_local = threading.Thread(target=self.rea, args=(curr_count_c,))
+        thr_local.start()
 
     def receive_msg(self, id_client, size):
         return self.clients[id_client].recv(size)
@@ -71,6 +82,18 @@ class Server:
         self.running_task = False
         while self.status_scheduler:
             sleep(0.01)
+
+    def init_acceptor(self):
+        print("init acceptor")
+        thr_local = threading.Thread(target=self.init_acceptor_impl, args=())
+        thr_local.start()
+        self.thr.append(thr_local)
+
+    def init_acceptor_impl(self):
+        while True:
+            print("waiting...")
+            self.listen(1)
+            self.wait_connection()
 
 
 serv_sock = Server
@@ -134,6 +157,7 @@ def do_cmd(cmd_line):
         elif server_opt == cmd_opt_start_server:
             serv_sock = Server(int(num_port), "localhost")
             serv_sock.create()
+            serv_sock.init_acceptor()
             print("server started")
 
         elif server_opt == cmd_opt_close_server:
@@ -144,9 +168,10 @@ def do_cmd(cmd_line):
             print("invalid option for --server %s" % server_opt)
 
     if is_send_msg:
-        serv_sock.send_msg(msg, 0)
-        data = serv_sock.receive_msg(0, len(msg))
-        print(data.decode("utf-8"))
+        for cli_fd in serv_sock.clients:
+            serv_sock.send_msg(msg, 0)
+        # data = serv_sock.receive_msg(0, len(msg))
+        # print(data.decode("utf-8"))
 
     if is_msg_dump:
         serv_sock.send_msg(serv_sock.dump_data, 0)
@@ -163,6 +188,7 @@ def do_cmd(cmd_line):
 
 def main():
     while True:
+        sleep(0.3)
         cmd_line = input("please type command: ")
         if cmd_line == cmd_alias_server_start[0]:
             cmd_line = cmd_alias_server_start[1]

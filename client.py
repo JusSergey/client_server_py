@@ -24,6 +24,9 @@ def main():
     init_client(portnum)
     while True:
         data = client_sock.recv(128)
+        if len(data) == 0:
+            print("server is closed")
+            break
         strmsg = str(data.decode("utf-8"))
         print("receive:  %s" % strmsg)
         responceStr = revert(strmsg)
