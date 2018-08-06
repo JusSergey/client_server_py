@@ -177,7 +177,8 @@ class DoCmd:
         if field_cmd == cmd_msg:
             self.context.do_message = assign_value
         if field_cmd == cmd_msg_dump:
-            self.context.dump = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(int(assign_value[CMD]) * 1024)])
+            if len(self.context.dump) < int(assign_value[CMD]) * 1024:
+                self.context.dump = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(int(assign_value[CMD]) * 1024)])
             self.context.do_message_dump = assign_value
         if field_cmd == cmd_help:
             self.context.do_help = assign_value
