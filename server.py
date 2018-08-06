@@ -151,6 +151,7 @@ class DoCmd:
         self.cmds = cmd.split(" ")
         self.context = CommandContext()
         self.serv_sock = serv_sock_
+        self.status = True
         self.parse()
 
 
@@ -177,7 +178,7 @@ class DoCmd:
         if field_cmd == cmd_msg:
             self.context.do_message = assign_value
         if field_cmd == cmd_msg_dump:
-            if len(self.context.dump) < int(assign_value[CMD]) * 1024:
+            if len(self.context.dump) < (int(assign_value[CMD]) * 1024):
                 self.context.dump = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(int(assign_value[CMD]) * 1024)])
             self.context.do_message_dump = assign_value
         if field_cmd == cmd_help:
@@ -212,7 +213,7 @@ class DoCmd:
             print("server started")
 
         elif self.context.do_server[CMD] == cmd_opt_close_server:
-            serv_sock.close()
+            self.serv_sock.close()
             print("server closed")
 
     def do_message_impl(self, msg):
@@ -252,6 +253,8 @@ class DoCmd:
             self.do_help()
         if self.context.do_delay[ARG]:
             self.do_delay()
+        if self.context.do_exit:
+            self.status = False
 
     def do(self):
         while True:
@@ -268,7 +271,8 @@ serv_sock = Server
 
 def main():
     global serv_sock
-    while True:
+    status = True
+    while status:
         sleep(0.3)
         cmd_line = input("please type command: ")
         if cmd_line == cmd_alias_server_start[0]:
@@ -276,6 +280,7 @@ def main():
 
         cmd_worker = DoCmd(cmd_line, serv_sock)
         cmd_worker.do()
+        #status = cmd_worker.status
 
         # save server for next ops
         serv_sock = cmd_worker.serv_sock

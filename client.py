@@ -27,8 +27,8 @@ def main(portnum, it):
             break
         strmsg = str(data.decode("utf-8"))
         print("id:[%s], packet sz:[%s bytes]" % (str(it), str(len(strmsg))))
-        responceStr = revert(strmsg)
-        client_sock.sendall(responceStr.encode())
+        #responceStr = revert(strmsg)
+        client_sock.sendall(strmsg.encode())
         sleep(0.01)
 
 
@@ -38,7 +38,7 @@ def start_client_impl(port_num, it):
 
 
 def test_perf():
-    count_clients = 1 # int(input("enter please count clients: "))
+    count_clients = int(input("enter please count clients: "))
     port_num = 12300 # str(input("server port: "))
     it = 0
     while it < count_clients:
