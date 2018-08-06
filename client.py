@@ -38,8 +38,8 @@ def start_client_impl(port_num, it):
 
 
 def test_perf():
-    count_clients = int(input("enter please count clients: "))
-    port_num = str(input("server port: "))
+    count_clients = 1 # int(input("enter please count clients: "))
+    port_num = 1234 # str(input("server port: "))
     it = 0
     while it < count_clients:
         start_client_impl(port_num, it)
