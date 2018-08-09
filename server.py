@@ -31,8 +31,6 @@ class Server:
         self.scheduler_task = threading.Thread
         self.count = 0
         self.ip = ip
-        self.running_task = False
-        self.status_scheduler = False
         self.dump_data = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(60000)])
         self.enable_print = True
 
@@ -46,12 +44,13 @@ class Server:
     def listen(self, count):
         self.sock.listen(count)
 
-    def rea(self, fd_c):
+    def on_readable(self, fd_c):
         while True:
             sleep(0.01)
+            print("reading...")
             data = self.clients[fd_c].recv(60000)
             if len(data) == 0:
-                pass
+                print("client %d closed" % fd_c)
             elif self.enable_print:
                 print("id:[%d] packet sz: [%s]" % (fd_c, str(len(data.decode("UTF-8")))))
 
@@ -60,7 +59,7 @@ class Server:
         self.clients.append(cli_fd[0])
         curr_count_c = self.count
         self.count += 1
-        thr_local = threading.Thread(target=self.rea, args=(curr_count_c,))
+        thr_local = threading.Thread(target=self.on_readable, args=(curr_count_c,))
         thr_local.start()
         print("accepted client...")
 
@@ -68,32 +67,15 @@ class Server:
         return self.clients[id_client].recv(size)
 
     def send_msg(self, message, id_client):
+        print("sending...")
         self.clients[id_client].sendall(message.encode())
+        print("sent")
 
     def close(self):
         self.sock.close()
 
     def size(self):
         return self.count
-
-    def task_repeater(self, cmd_line, repeat_count):
-        print("task repeater")
-        i = repeat_count
-        self.running_task = True
-        self.status_scheduler = True
-        while self.running_task and (repeat_count == 0 or i > 0):
-            do_cmd(cmd_line)
-            i -= 0
-        self.status_scheduler = False
-
-    def schedule_task(self, cmd_line, repeat_count):
-        self.scheduler_task = threading.Thread(target=self.task_repeater, args=(cmd_line, repeat_count))
-        self.scheduler_task.start()
-
-    def stop_scheduler(self):
-        self.running_task = False
-        while self.status_scheduler:
-            sleep(0.01)
 
     def init_acceptor(self):
         print("init acceptor")
@@ -110,7 +92,6 @@ class Server:
 
 ARG = 0
 CMD = 1
-THR = 2
 
 
 data_init = [(cmd_server, True),

@@ -21,14 +21,15 @@ def main(portnum, it):
 
     client_sock = init_client(portnum)
     while True:
+        print("reading...")
         data = client_sock.recv(60000)
         if len(data) == 0:
             print("server is closed")
             break
         strmsg = str(data.decode("utf-8"))
         print("id:[%s], packet sz:[%s bytes]" % (str(it), str(len(strmsg))))
-        #responceStr = revert(strmsg)
         client_sock.sendall(strmsg.encode())
+        print("sent")
         sleep(0.01)
 
 
